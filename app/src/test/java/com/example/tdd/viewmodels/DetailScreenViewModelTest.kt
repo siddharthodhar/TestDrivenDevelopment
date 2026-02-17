@@ -5,8 +5,6 @@ import com.example.tdd.viewmodels.domain.entity.Data
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -43,37 +41,36 @@ class DetailScreenViewModelTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun data_first_emits_null_then_returns_data_for_given_id() = runTest {
+    fun data_initially_returns_null() = runTest {
         whenever(repo.getDataById(1))
             .thenReturn(flowOf(mockData))
 
         viewModel = DetailScreenViewModel(repo, 1)
 
-        val emissions = mutableListOf<Data?>()
-        val job = launch {
-            viewModel.data.take(2).collect {
-                emissions.add(it)
-            }
-        }
-
-        advanceUntilIdle()
-        job.join()
-
-        assertEquals(2, emissions.size)
-        assertNull(emissions.first())
-        assertEquals(mockData, emissions.last())
+        assertNull(viewModel.data)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun data_emits_null_when_id_not_found() = runTest {
+    fun data_returns_data_for_given_id() = runTest {
+        whenever(repo.getDataById(1))
+            .thenReturn(flowOf(mockData))
+
+        viewModel = DetailScreenViewModel(repo, 1)
+        advanceUntilIdle()
+
+        assertEquals(mockData, viewModel.data)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun data_returns_null_when_id_not_found() = runTest {
         whenever(repo.getDataById(999))
             .thenReturn(flowOf(null))
 
         viewModel = DetailScreenViewModel(repo, 999)
-
         advanceUntilIdle()
 
-        assertNull(viewModel.data.value)
+        assertNull(viewModel.data)
     }
 }

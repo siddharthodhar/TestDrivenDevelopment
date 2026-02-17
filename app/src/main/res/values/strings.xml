@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">TDD</string>
+    <string name="home_title">TDD App</string>
+    <string name="home_empty_message">No items yet. Pull down to refresh.</string>
+    <string name="error_generic">An error occurred</string>
+    <string name="detail_title">Detail</string>
+    <string name="back">Back</string>
 </resources>

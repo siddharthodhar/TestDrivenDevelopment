@@ -101,7 +101,7 @@ class TDDLocalDataSourceTest {
 
         val result = datasource.getDataById(2).first()
 
-        assertEquals(2, result?.id)
         assertEquals(3, result?.userId)
+        assertEquals(2, result?.id)
     }
 }

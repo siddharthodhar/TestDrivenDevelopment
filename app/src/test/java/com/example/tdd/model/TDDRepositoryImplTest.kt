@@ -5,6 +5,7 @@ import com.example.tdd.model.data.local.entity.DataEntity
 import com.example.tdd.model.data.local.entity.toDomain
 import com.example.tdd.model.data.remote.datasource.TDDAPIDataSource
 import com.example.tdd.model.data.remote.entity.DataResponse
+import com.example.tdd.model.data.remote.entity.toDataEntity
 import com.example.tdd.viewmodels.domain.APIResult
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
@@ -15,7 +16,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -72,22 +73,18 @@ class TDDRepositoryImplTest {
 
     @Test
     fun fetch_data_inserts_correct_data_to_local_database() = runTest {
+        val mockResponseList = listOf(
+            mockResponse, mockResponse.copy(userId = 2, id = 2)
+        )
         val apiResponse = ApiResponse.Success(
-            200, listOf(
-                mockResponse, mockResponse.copy(userId = 2, id = 2)
-            )
+            200, mockResponseList
         )
 
         whenever(remote.fetch()).thenReturn(apiResponse)
 
         repo.fetchData().toList()
 
-        val captor = argumentCaptor<List<DataEntity>>()
-        verify(local).insertData(captor.capture())
-
-        assertEquals(2, captor.firstValue.size)
-        assertEquals(1, captor.firstValue.first().id)
-        verify(local).insertData(any())
+        verify(local).insertData(eq(mockResponseList.map { it.toDataEntity() }))
     }
 
     @Test

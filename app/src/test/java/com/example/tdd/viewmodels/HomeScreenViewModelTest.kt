@@ -6,9 +6,6 @@ import com.example.tdd.viewmodels.domain.entity.Data
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -46,27 +43,27 @@ class HomeScreenViewModelTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun get_data_first_gives_empty_list_then_returns_data_once_available() = runTest {
+    fun get_data_initially_returns_empty_list() = runTest {
         whenever(repo.getData())
             .thenReturn(flowOf(listOf(mockData)))
 
         viewModel = HomeScreenViewModel(repo)
 
-        val emissions = mutableListOf<List<Data>>()
-        val job = launch {
-            viewModel.data.take(2).collect {
-                emissions.add(it)
-            }
-        }
-
-        advanceUntilIdle()
-        job.join()
-
-        assertEquals(2, emissions.size)
-        assertEquals(listOf<Data>(), emissions.first())
-        assertEquals(mockData, emissions.last().first())
+        assertEquals(listOf<Data>(), viewModel.data)
     }
-    
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun get_data_returns_data_once_available() = runTest {
+        whenever(repo.getData())
+            .thenReturn(flowOf(listOf(mockData)))
+
+        viewModel = HomeScreenViewModel(repo)
+        advanceUntilIdle()
+
+        assertEquals(listOf(mockData), viewModel.data)
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun fetch_data_calls_repo_fetch_data_and_inserts_data_into_db() = runTest {
@@ -77,30 +74,45 @@ class HomeScreenViewModelTest {
 
         viewModel = HomeScreenViewModel(repo)
 
-        val emissions = viewModel.fetchData().toList()
+        viewModel.fetchData()
+        advanceUntilIdle()
 
         verify(repo).fetchData()
-        assertEquals(2, emissions.size)
-        assertTrue(emissions[0] is APIResult.Loading)
-        assertTrue(emissions[1] is APIResult.Success)
+        assertTrue(viewModel.fetchState is APIResult.Success)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun fetch_data_emits_loading_then_error_on_failure() = runTest {
+    fun fetch_data_emits_error_on_failure() = runTest {
         val exception = RuntimeException("Network error")
         whenever(repo.getData())
             .thenReturn(flowOf(listOf()))
         whenever(repo.fetchData())
-            .thenReturn(flowOf(APIResult.Loading, APIResult.Error(exception)))
+            .thenReturn(flowOf(APIResult.Error(exception)))
 
         viewModel = HomeScreenViewModel(repo)
 
-        val emissions = viewModel.fetchData().toList()
+        viewModel.fetchData()
+        advanceUntilIdle()
 
-        assertEquals(2, emissions.size)
-        assertTrue(emissions[0] is APIResult.Loading)
-        assertTrue(emissions[1] is APIResult.Error)
-        assertEquals(exception, (emissions[1] as APIResult.Error).throwable)
+        assertTrue(viewModel.fetchState is APIResult.Error)
+        assertEquals(exception, (viewModel.fetchState as APIResult.Error).throwable)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun clear_fetch_state_sets_fetch_state_to_success() = runTest {
+        val exception = RuntimeException("Network error")
+        whenever(repo.getData())
+            .thenReturn(flowOf(listOf()))
+        whenever(repo.fetchData())
+            .thenReturn(flowOf(APIResult.Error(exception)))
+
+        viewModel = HomeScreenViewModel(repo)
+        viewModel.fetchData()
+        viewModel.clearFetchState()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.fetchState is APIResult.Success)
     }
 }
