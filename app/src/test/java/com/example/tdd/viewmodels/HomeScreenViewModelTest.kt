@@ -110,8 +110,11 @@ class HomeScreenViewModelTest {
 
         viewModel = HomeScreenViewModel(repo)
         viewModel.fetchData()
-        viewModel.clearFetchState()
         advanceUntilIdle()
+
+        assertTrue(viewModel.fetchState is APIResult.Error)
+
+        viewModel.clearFetchState()
 
         assertTrue(viewModel.fetchState is APIResult.Success)
     }

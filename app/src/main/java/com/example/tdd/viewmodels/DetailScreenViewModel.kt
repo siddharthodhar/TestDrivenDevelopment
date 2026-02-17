@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.tdd.viewmodels.domain.TDDRepository
 import com.example.tdd.viewmodels.domain.entity.Data
 import com.example.tdd.viewmodels.domain.usecases.GetDataByIdUseCase
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class DetailScreenViewModel(repo: TDDRepository, id: Int) : ViewModel() {
@@ -18,7 +17,7 @@ class DetailScreenViewModel(repo: TDDRepository, id: Int) : ViewModel() {
         private set
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             getDataByIdUseCase(id).collect { data = it }
         }
     }

@@ -10,7 +10,6 @@ import com.example.tdd.viewmodels.domain.TDDRepository
 import com.example.tdd.viewmodels.domain.entity.Data
 import com.example.tdd.viewmodels.domain.usecases.FetchDataUseCase
 import com.example.tdd.viewmodels.domain.usecases.GetDataUseCase
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class HomeScreenViewModel(repo: TDDRepository) : ViewModel() {
@@ -25,13 +24,13 @@ class HomeScreenViewModel(repo: TDDRepository) : ViewModel() {
         private set
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             getDataUseCase().collect { data = it }
         }
     }
 
     fun fetchData() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             fetchDataUseCase().collect { fetchState = it }
         }
     }
