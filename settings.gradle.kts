@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "TDD"
 include(":app")
- 
+include(":baselineprofile")
