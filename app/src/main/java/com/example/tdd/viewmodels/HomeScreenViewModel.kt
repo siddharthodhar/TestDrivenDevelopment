@@ -10,12 +10,20 @@ import com.example.tdd.viewmodels.domain.TDDRepository
 import com.example.tdd.viewmodels.domain.entity.Data
 import com.example.tdd.viewmodels.domain.usecases.FetchDataUseCase
 import com.example.tdd.viewmodels.domain.usecases.GetDataUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.launch
 
-class HomeScreenViewModel(repo: TDDRepository) : ViewModel() {
+@HiltViewModel
+class HomeScreenViewModel @Inject constructor(
+    private val fetchDataUseCase: FetchDataUseCase,
+    private val getDataUseCase: GetDataUseCase
+) : ViewModel() {
 
-    private val fetchDataUseCase = FetchDataUseCase(repo)
-    private val getDataUseCase = GetDataUseCase(repo)
+    constructor(repo: TDDRepository) : this(
+        fetchDataUseCase = FetchDataUseCase(repo),
+        getDataUseCase = GetDataUseCase(repo)
+    )
 
     var data by mutableStateOf<List<Data>>(listOf())
         private set

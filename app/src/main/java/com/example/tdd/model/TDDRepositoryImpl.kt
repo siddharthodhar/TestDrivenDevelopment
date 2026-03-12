@@ -8,11 +8,12 @@ import com.example.tdd.model.data.remote.entity.toDataEntity
 import com.example.tdd.viewmodels.domain.APIResult
 import com.example.tdd.viewmodels.domain.TDDRepository
 import com.example.tdd.viewmodels.domain.entity.Data
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
-class TDDRepositoryImpl(
+class TDDRepositoryImpl @Inject constructor(
     private val remote: TDDAPIDataSource,
     private val local: TDDLocalDataSource
 ): TDDRepository {

@@ -2,9 +2,10 @@ package com.example.tdd.model.data.local.datasource
 
 import com.example.tdd.model.data.local.dao.TDDDao
 import com.example.tdd.model.data.local.entity.DataEntity
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
-class TDDLocalDataSource(
+class TDDLocalDataSource @Inject constructor(
     private val dao: TDDDao
 ) {
 

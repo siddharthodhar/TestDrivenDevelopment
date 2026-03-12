@@ -3,10 +3,11 @@ package com.example.tdd.model.data.remote.datasource
 import com.example.tdd.model.ApiResponse
 import com.example.tdd.model.data.remote.entity.DataResponse
 import com.example.tdd.model.data.remote.service.TDDApiService
+import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import retrofit2.Response
 
-class TDDAPIDataSource(
+class TDDAPIDataSource @Inject constructor(
     private val api: TDDApiService
 ) {
 
