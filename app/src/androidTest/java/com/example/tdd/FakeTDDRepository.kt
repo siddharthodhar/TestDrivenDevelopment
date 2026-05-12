@@ -12,11 +12,17 @@ class FakeTDDRepository : TDDRepository {
     val fetchDataFlow = MutableStateFlow<APIResult<Unit>>(APIResult.Success(Unit))
     private val dataByIdFlows = mutableMapOf<Int, MutableStateFlow<Data?>>()
 
+    var fetchDataCallCount = 0
+        private set
+
     fun getOrCreateDataByIdFlow(id: Int): MutableStateFlow<Data?> {
         return dataByIdFlows.getOrPut(id) { MutableStateFlow(null) }
     }
 
-    override fun fetchData(): Flow<APIResult<Unit>> = fetchDataFlow
+    override fun fetchData(): Flow<APIResult<Unit>> {
+        fetchDataCallCount++
+        return fetchDataFlow
+    }
 
     override fun getData(): Flow<List<Data>> = dataFlow
 

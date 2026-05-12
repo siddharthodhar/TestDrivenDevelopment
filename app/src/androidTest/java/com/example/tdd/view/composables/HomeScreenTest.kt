@@ -3,13 +3,18 @@ package com.example.tdd.view.composables
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import com.example.tdd.FakeTDDRepository
 import com.example.tdd.viewmodels.HomeScreenViewModel
 import com.example.tdd.viewmodels.domain.APIResult
 import com.example.tdd.viewmodels.domain.entity.Data
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -117,6 +122,50 @@ class HomeScreenTest {
                 .fetchSemanticsNodes().isNotEmpty()
         }
         composeTestRule.onNodeWithText("Network failure").assertIsDisplayed()
+    }
+
+    @Test
+    fun homeScreen_pullToRefresh_triggersFetchData() {
+        val viewModel = createViewModel()
+        composeTestRule.setContent {
+            HomeScreen(viewModel = viewModel, onItemClick = {})
+        }
+
+        val callCountBefore = fakeRepo.fetchDataCallCount
+
+        composeTestRule.onNodeWithTag("data_list")
+            .performTouchInput { swipeDown() }
+
+        composeTestRule.waitForIdle()
+
+        assertTrue(
+            "fetchData should be called after pull-to-refresh",
+            fakeRepo.fetchDataCallCount > callCountBefore
+        )
+    }
+
+    @Test
+    fun homeScreen_scrollToItem_displaysOffScreenItem() {
+        val items = (1..30).map { i ->
+            Data(userId = 1, id = i, title = "Title $i", body = "Body $i")
+        }
+        fakeRepo.dataFlow.value = items
+        val viewModel = createViewModel()
+        composeTestRule.setContent {
+            HomeScreen(viewModel = viewModel, onItemClick = {})
+        }
+
+        composeTestRule.waitUntil(5000) {
+            composeTestRule.onAllNodes(hasText("Title 1"))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule.onNodeWithText("Title 30").assertDoesNotExist()
+
+        composeTestRule.onNodeWithTag("data_list")
+            .performScrollToNode(hasText("Title 30"))
+
+        composeTestRule.onNodeWithText("Title 30").assertIsDisplayed()
     }
 }
 
