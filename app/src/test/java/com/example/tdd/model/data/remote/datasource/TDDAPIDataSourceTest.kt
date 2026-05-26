@@ -21,6 +21,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 class TDDAPIDataSourceTest {
     private lateinit var server: MockWebServer
     private lateinit var api: TDDApiService
+    private lateinit var dataSource: TDDAPIDataSource
     private val responseJson = "[\n" +
             "  {\n" +
             "    \"userId\": 1,\n" +
@@ -49,6 +50,7 @@ class TDDAPIDataSourceTest {
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create(TDDApiService::class.java)
+        dataSource = TDDAPIDataSource(api)
     }
 
     @After
@@ -57,38 +59,12 @@ class TDDAPIDataSourceTest {
     }
 
     @Test
-    fun fetch_api_success() = runTest {
+    fun callFetch_validResponse_returnsSuccess() = runTest {
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
                 .setBody(responseJson)
         )
-        val response = api.fetch()
-
-        assertTrue(response.isSuccessful)
-        assertEquals(1, response.body()?.first()?.userId)
-    }
-
-    @Test
-    fun fetch_api_failed() = runTest {
-        server.enqueue(
-            MockResponse()
-                .setResponseCode(400)
-        )
-        val response = api.fetch()
-
-        assertFalse(response.isSuccessful)
-        assertNull(response.body()?.first()?.userId)
-    }
-
-    @Test
-    fun fetch_datasource_success() = runTest {
-        server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(responseJson)
-        )
-        val dataSource = TDDAPIDataSource(api)
         val apiResponse = dataSource.fetch()
 
         assertTrue(apiResponse is ApiResponse.Success)
@@ -99,13 +75,12 @@ class TDDAPIDataSourceTest {
     }
 
     @Test
-    fun fetch_datasource_success_with_no_body() = runTest {
+    fun callingFetch_whenSuccessWithNull_returnsErrorWithIllegalStateException() = runTest {
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
                 .setBody("null")
         )
-        val dataSource = TDDAPIDataSource(api)
         val apiResponse = dataSource.fetch()
 
         assertTrue(apiResponse is ApiResponse.Error)
@@ -117,12 +92,11 @@ class TDDAPIDataSourceTest {
     }
 
     @Test
-    fun fetch_failed_with_no_body() = runTest {
+    fun callingFetch_whenBadRequest_returnsError() = runTest {
         server.enqueue(
             MockResponse()
                 .setResponseCode(400)
         )
-        val dataSource = TDDAPIDataSource(api)
         val apiResponse = dataSource.fetch()
 
         assertTrue(apiResponse is ApiResponse.Error)
@@ -133,7 +107,7 @@ class TDDAPIDataSourceTest {
     }
 
     @Test
-    fun fetch_failed_with_network_exception() = runTest {
+    fun callingFetch_whenSuccessWithInvalidJson_returnsErrorWithIllegalStateException() = runTest {
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
@@ -151,12 +125,11 @@ class TDDAPIDataSourceTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun fetch_when_cancelled_throws_cancellation_exception() = runTest {
+    fun callingFetch_whenCancelled_throwsCancellationException() = runTest {
         server.enqueue(
             MockResponse()
                 .setSocketPolicy(SocketPolicy.NO_RESPONSE)
         )
-        val dataSource = TDDAPIDataSource(api)
 
         val deferred = async {
             dataSource.fetch()
